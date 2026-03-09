@@ -1,0 +1,5 @@
+{
+  "name": "JobMap Explorer",
+  "description": "Recherchez des offres d'emploi autour de vous avec une carte interactive et des filtres de distance.",
+  "requestFramePermissions": ["geolocation"]
+}
