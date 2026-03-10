@@ -129,8 +129,12 @@ export async function searchJobs(params: SearchParams): Promise<JobOffer[]> {
     });
 
     return jobs;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error searching jobs:", error);
+    if (error?.status === 429 || error?.message?.includes("429") || error?.message?.includes("RESOURCE_EXHAUSTED") || error?.status === "RESOURCE_EXHAUSTED") {
+      console.warn("Rate limit exceeded, falling back to mock jobs");
+      return getMockJobs(params);
+    }
     return [];
   }
 }
@@ -152,14 +156,14 @@ export async function geocodeLocation(locationName: string): Promise<{ lat: numb
     });
     
     return JSON.parse(response.text);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Geocoding error:", error);
     return null;
   }
 }
 
 export function getMockJobs(params: SearchParams): JobOffer[] {
-  const { query, location, radius, lat, lng } = params;
+  const { query, location, radius, lat, lng, expandToSimilar } = params;
   const mockJobs: JobOffer[] = [
     {
       id: "mock-1",
@@ -180,11 +184,12 @@ export function getMockJobs(params: SearchParams): JobOffer[] {
       transitSummary: "Métro 1 puis Bus 72",
       companyDescription: "TechNova est un leader dans le développement de solutions logicielles sur mesure pour les entreprises du CAC 40.",
       website: "https://technova.example.com",
-      rating: 4.8
+      rating: 4.8,
+      isSimilarJob: false
     },
     {
       id: "mock-2",
-      title: query || "Chef de Projet Marketing Digital",
+      title: expandToSimilar ? "Scrum Master / Agile Coach" : (query || "Chef de Projet Marketing Digital"),
       company: "Creative Pulse Agency",
       location: location || "Paris",
       description: "Rejoignez une agence créative en pleine croissance. Vous piloterez des campagnes multicanales pour des marques internationales prestigieuses.",
@@ -201,11 +206,12 @@ export function getMockJobs(params: SearchParams): JobOffer[] {
       transitSummary: "Ligne 14 puis 10 min de marche",
       companyDescription: "Creative Pulse est une agence de communication 360° spécialisée dans le luxe et la mode.",
       website: "https://creativepulse.example.com",
-      rating: 4.2
+      rating: 4.2,
+      isSimilarJob: expandToSimilar ? true : false
     },
     {
       id: "mock-3",
-      title: query || "Analyste Data Science",
+      title: expandToSimilar ? "Product Owner" : (query || "Analyste Data Science"),
       company: "DataInsight Corp",
       location: location || "Paris",
       description: "Exploitez la puissance de la donnée pour transformer le business. Vous concevrez des modèles prédictifs complexes pour optimiser les processus de nos clients.",
@@ -222,7 +228,8 @@ export function getMockJobs(params: SearchParams): JobOffer[] {
       transitSummary: "RER B puis Bus 197",
       companyDescription: "DataInsight aide les entreprises à prendre de meilleures décisions grâce à l'analyse avancée de données massives.",
       website: "https://datainsight.example.com",
-      rating: 4.5
+      rating: 4.5,
+      isSimilarJob: expandToSimilar ? true : false
     }
   ];
   return mockJobs;
@@ -245,7 +252,7 @@ export async function getAddressSuggestions(input: string): Promise<string[]> {
       }
     });
     return JSON.parse(response.text);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Suggestions error:", error);
     return [];
   }

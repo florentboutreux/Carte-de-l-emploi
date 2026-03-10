@@ -29,7 +29,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isFavorite, o
       }`}
     >
       <div className="flex justify-between items-start gap-2">
-        <h3 className="font-bold text-gray-900 leading-tight flex-1">{job.title}</h3>
+        <div className="flex-1">
+          {job.isSimilarJob && (
+            <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full mb-1.5 uppercase tracking-wider">
+              Métier similaire
+            </span>
+          )}
+          <h3 className="font-bold text-gray-900 leading-tight">{job.title}</h3>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleFavorite}

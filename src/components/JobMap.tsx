@@ -6,7 +6,6 @@ import { JobOffer } from '../types';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useRoute } from '../hooks/useRoute';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -52,7 +51,6 @@ function MapEvents({ onLocationSelect }: { onLocationSelect?: (lat: number, lng:
 export const JobMap: React.FC<JobMapProps> = ({ jobs, center, userCoords, onLocationSelect, onJobSelect, selectedJobId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedJob = jobs.find(j => j.id === selectedJobId);
-  const { route } = useRoute(userCoords, selectedJob ? [selectedJob.lat, selectedJob.lng] : null);
 
   function MarkerController({ selectedId, jobs }: { selectedId: string | null, jobs: JobOffer[] }) {
     const map = useMap();
@@ -106,49 +104,62 @@ export const JobMap: React.FC<JobMapProps> = ({ jobs, center, userCoords, onLoca
           </Marker>
         )}
 
-        {route && route.coordinates.length > 0 ? (
-          <Polyline 
-            positions={route.coordinates} 
-            color="#3b82f6" 
-            weight={4}
-            opacity={0.8}
-          />
-        ) : selectedJob && userCoords ? (
+        {selectedJob && userCoords && (
           <Polyline 
             positions={[userCoords, [selectedJob.lat, selectedJob.lng]]} 
             color="#10b981" 
             dashArray="10, 10"
             weight={3}
           />
-        ) : null}
+        )}
         
-        {jobs.map((job) => (
-          <Marker 
-            key={job.id} 
-            position={[job.lat, job.lng]}
-            opacity={selectedJobId && selectedJobId !== job.id ? 0.5 : 1}
-            eventHandlers={{
-              click: () => {
-                onJobSelect?.(job);
-              },
-            }}
-          >
-            <Popup>
-              <div className="p-1 min-w-[150px]">
-                <h3 className="font-bold text-sm leading-tight">{job.title}</h3>
-                <p className="text-xs text-gray-600 mt-1">{job.company}</p>
-                <div className="flex flex-col gap-2 mt-3">
-                  <button 
-                    onClick={() => onJobSelect?.(job)}
-                    className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition-colors text-center"
-                  >
-                    Détails
-                  </button>
+        {jobs.map((job) => {
+          const isSimilar = job.isSimilarJob;
+          const markerIcon = L.icon({
+            iconUrl: isSimilar 
+              ? 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png'
+              : 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
+
+          return (
+            <Marker 
+              key={job.id} 
+              position={[job.lat, job.lng]}
+              icon={markerIcon}
+              opacity={selectedJobId && selectedJobId !== job.id ? 0.5 : 1}
+              eventHandlers={{
+                click: () => {
+                  onJobSelect?.(job);
+                },
+              }}
+            >
+              <Popup>
+                <div className="p-1 min-w-[150px]">
+                  {isSimilar && (
+                    <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full mb-1 uppercase tracking-wider">
+                      Métier similaire
+                    </span>
+                  )}
+                  <h3 className="font-bold text-sm leading-tight">{job.title}</h3>
+                  <p className="text-xs text-gray-600 mt-1">{job.company}</p>
+                  <div className="flex flex-col gap-2 mt-3">
+                    <button 
+                      onClick={() => onJobSelect?.(job)}
+                      className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-700 transition-colors text-center"
+                    >
+                      Détails
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );
