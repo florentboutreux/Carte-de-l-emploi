@@ -24,7 +24,7 @@ function getAI() {
 }
 
 export async function searchJobs(params: SearchParams): Promise<JobOffer[]> {
-  const { query, location, radius, lat, lng, filters, userAddress } = params;
+  const { query, location, radius, lat, lng, filters, userAddress, expandToSimilar } = params;
   const ai = getAI();
   
   if (!ai) {
@@ -43,9 +43,16 @@ export async function searchJobs(params: SearchParams): Promise<JobOffer[]> {
   L'utilisateur habite à l'adresse suivante : "${userAddress}". 
   Pour chaque offre, calcule la distance exacte en voiture et le temps de trajet estimé depuis cette adresse en utilisant Google Maps.` : '';
 
+  const similarPrompt = expandToSimilar ? `
+  IMPORTANT: L'utilisateur a demandé d'élargir la recherche aux métiers similaires ou aux métiers qui utilisent des compétences transférables.
+  Inclus environ 50% d'offres correspondant exactement à "${query}" et 50% d'offres pour des métiers similaires ou connexes.
+  Pour chaque offre, indique "isSimilarJob": true si c'est un métier connexe/similaire, ou false si c'est exactement le métier recherché.` : `
+  Pour chaque offre, indique "isSimilarJob": false.`;
+
   const prompt = `Recherche des offres d'emploi pour "${query}" à "${location}" ou dans un rayon de ${radius}km.
   ${filterText}
   ${travelPrompt}
+  ${similarPrompt}
   
    Pour chaque offre trouvée, donne-moi les informations suivantes au format JSON dans ton texte (je vais le parser) :
   - title: le titre du poste
@@ -66,6 +73,7 @@ export async function searchJobs(params: SearchParams): Promise<JobOffer[]> {
   - companyDescription: une description de l'entreprise
   - website: le site web de l'entreprise
   - rating: une note sur 5 (ex: 4.2)
+  - isSimilarJob: booléen (true si c'est un métier connexe, false sinon)
   
   Utilise l'outil Google Maps pour valider les emplacements des entreprises, calculer les distances et vérifier les options de transport en commun.`;
 

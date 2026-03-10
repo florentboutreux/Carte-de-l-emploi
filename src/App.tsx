@@ -23,6 +23,7 @@ export default function App() {
     radius: 20,
     lat: 48.8566,
     lng: 2.3522,
+    expandToSimilar: false,
     filters: {
       contractType: '',
       experienceLevel: '',
@@ -268,10 +269,12 @@ export default function App() {
                 location={params.location}
                 userAddress={params.userAddress || ''}
                 radius={params.radius}
+                expandToSimilar={params.expandToSimilar}
                 onQueryChange={(q) => setParams(p => ({ ...p, query: q }))}
                 onLocationChange={(l) => setParams(p => ({ ...p, location: l }))}
                 onUserAddressChange={(a) => setParams(p => ({ ...p, userAddress: a }))}
                 onRadiusChange={(r) => setParams(p => ({ ...p, radius: r }))}
+                onExpandToSimilarChange={(val) => setParams(p => ({ ...p, expandToSimilar: val }))}
                 onSearch={handleSearch}
                 isLoading={isLoading}
               />

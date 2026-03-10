@@ -19,6 +19,7 @@ export interface JobOffer {
   companyDescription?: string;
   website?: string;
   rating?: number;
+  isSimilarJob?: boolean;
 }
 
 export interface SearchFilters {
@@ -36,6 +37,7 @@ export interface SearchParams {
   lng?: number;
   filters?: SearchFilters;
   userAddress?: string;
+  expandToSimilar?: boolean;
 }
 
 export interface JobAlert {

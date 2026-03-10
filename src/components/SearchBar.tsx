@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Sliders, X, Home, Car, Loader2 } from 'lucide-react';
+import { Search, MapPin, Sliders, X, Home, Car, Loader2, GitMerge } from 'lucide-react';
 import { getAddressSuggestions } from '../services/geminiService';
 
 interface SearchBarProps {
@@ -7,10 +7,12 @@ interface SearchBarProps {
   location: string;
   userAddress: string;
   radius: number;
+  expandToSimilar?: boolean;
   onQueryChange: (val: string) => void;
   onLocationChange: (val: string) => void;
   onUserAddressChange: (val: string) => void;
   onRadiusChange: (val: number) => void;
+  onExpandToSimilarChange?: (val: boolean) => void;
   onSearch: () => void;
   isLoading: boolean;
 }
@@ -20,10 +22,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   location,
   userAddress,
   radius,
+  expandToSimilar = false,
   onQueryChange,
   onLocationChange,
   onUserAddressChange,
   onRadiusChange,
+  onExpandToSimilarChange,
   onSearch,
   isLoading
 }) => {
@@ -150,6 +154,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             </div>
           )}
         </div>
+
+        {onExpandToSimilarChange && (
+          <label className="flex items-center gap-2 cursor-pointer p-2 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">
+            <input 
+              type="checkbox" 
+              checked={expandToSimilar}
+              onChange={(e) => onExpandToSimilarChange(e.target.checked)}
+              className="rounded text-purple-600 focus:ring-purple-500"
+            />
+            <span className="text-sm font-bold text-purple-900 flex items-center gap-1.5">
+              <GitMerge size={16} />
+              Élargir aux métiers similaires
+            </span>
+          </label>
+        )}
 
         <button
           onClick={onSearch}
