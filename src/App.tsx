@@ -85,16 +85,34 @@ export default function App() {
   const fetchFavorites = async () => {
     try {
       const res = await fetch('/api/favorites');
+      if (!res.ok) throw new Error('API not available');
       const data = await res.json();
       setFavorites(data);
     } catch (err) {
-      console.error("Failed to fetch favorites", err);
+      console.warn("API not available, using localStorage for favorites");
+      const localFavs = localStorage.getItem('jobmap_favorites');
+      if (localFavs) {
+        try {
+          setFavorites(JSON.parse(localFavs));
+        } catch (e) {
+          console.error("Failed to parse local favorites", e);
+        }
+      }
     }
   };
 
   const toggleFavorite = async (e: React.MouseEvent, job: JobOffer) => {
     e.stopPropagation();
     const isFav = favorites.some(f => f.id === job.id);
+    
+    // Optimistic update for UI
+    const newFavorites = isFav 
+      ? favorites.filter(f => f.id !== job.id)
+      : [...favorites, job];
+      
+    setFavorites(newFavorites);
+    localStorage.setItem('jobmap_favorites', JSON.stringify(newFavorites));
+
     try {
       if (isFav) {
         await fetch(`/api/favorites/${job.id}`, { method: 'DELETE' });
@@ -105,9 +123,9 @@ export default function App() {
           body: JSON.stringify(job),
         });
       }
-      fetchFavorites();
     } catch (err) {
-      console.error("Failed to toggle favorite", err);
+      // Ignore API errors since we already updated localStorage
+      console.warn("API not available, favorite saved locally");
     }
   };
 
@@ -386,7 +404,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <JobDetailsModalContent job={viewedJob} userCoords={userCoords} />
+                    <JobDetailsModalContent job={viewedJob} />
                   </div>
                 </motion.div>
               )}

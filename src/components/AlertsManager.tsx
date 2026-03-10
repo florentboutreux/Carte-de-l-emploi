@@ -20,10 +20,19 @@ export const AlertsManager: React.FC<AlertsManagerProps> = ({ currentParams, onC
   const fetchAlerts = async () => {
     try {
       const res = await fetch('/api/alerts');
+      if (!res.ok) throw new Error('API not available');
       const data = await res.json();
       setAlerts(data);
     } catch (err) {
-      console.error("Failed to fetch alerts", err);
+      console.warn("API not available, using localStorage for alerts");
+      const localAlerts = localStorage.getItem('jobmap_alerts');
+      if (localAlerts) {
+        try {
+          setAlerts(JSON.parse(localAlerts));
+        } catch (e) {
+          console.error("Failed to parse local alerts", e);
+        }
+      }
     }
   };
 
@@ -38,25 +47,33 @@ export const AlertsManager: React.FC<AlertsManagerProps> = ({ currentParams, onC
       createdAt: new Date().toISOString(),
     };
 
+    // Optimistic update for UI
+    const newAlerts = [...alerts, newAlert];
+    setAlerts(newAlerts);
+    localStorage.setItem('jobmap_alerts', JSON.stringify(newAlerts));
+    setIsCreating(false);
+
     try {
       await fetch('/api/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAlert),
       });
-      setIsCreating(false);
-      fetchAlerts();
     } catch (err) {
-      console.error("Failed to create alert", err);
+      console.warn("API not available, alert saved locally");
     }
   };
 
   const handleDeleteAlert = async (id: string) => {
+    // Optimistic update for UI
+    const newAlerts = alerts.filter(a => a.id !== id);
+    setAlerts(newAlerts);
+    localStorage.setItem('jobmap_alerts', JSON.stringify(newAlerts));
+
     try {
       await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
-      fetchAlerts();
     } catch (err) {
-      console.error("Failed to delete alert", err);
+      console.warn("API not available, alert deleted locally");
     }
   };
 
