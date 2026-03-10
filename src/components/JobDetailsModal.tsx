@@ -1,14 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { JobOffer } from '../types';
-import { X, Building2, MapPin, ExternalLink, Star, Briefcase, Clock, Car, Globe, Info, TrainFront } from 'lucide-react';
-import { motion } from 'motion/react';
+import { X, Building2, MapPin, ExternalLink, Star, Briefcase, Clock, Car, Globe, Info, TrainFront, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useRoute } from '../hooks/useRoute';
 
 interface JobDetailsModalProps {
   job: JobOffer;
   onClose: () => void;
+  userCoords?: [number, number] | null;
 }
 
-export const JobDetailsModalContent: React.FC<{ job: JobOffer }> = ({ job }) => {
+export const JobDetailsModalContent: React.FC<{ job: JobOffer, userCoords?: [number, number] | null }> = ({ job, userCoords }) => {
+  const [showRouteDetails, setShowRouteDetails] = useState(false);
+  const { route, loading } = useRoute(userCoords, [job.lat, job.lng]);
+
+  const formatDistance = (meters: number) => {
+    if (meters < 1000) return `${Math.round(meters)} m`;
+    return `${(meters / 1000).toFixed(1)} km`;
+  };
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMins = minutes % 60;
+    return `${hours}h${remainingMins > 0 ? remainingMins.toString().padStart(2, '0') : ''}`;
+  };
+
+  const displayDistance = route ? formatDistance(route.distance) : job.travelDistance;
+  const displayDuration = route ? formatDuration(route.duration) : job.travelTime;
+
   return (
     <div className="space-y-8 p-6">
       {/* Quick Stats */}
@@ -44,7 +65,7 @@ export const JobDetailsModalContent: React.FC<{ job: JobOffer }> = ({ job }) => 
       </div>
 
       {/* Travel Info */}
-      {(job.travelDistance || job.travelTime || job.transitTime) && (
+      {(displayDistance || displayDuration || job.transitTime) && (
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
             <Car size={16} className="text-blue-600" />
@@ -53,18 +74,58 @@ export const JobDetailsModalContent: React.FC<{ job: JobOffer }> = ({ job }) => 
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Car Route */}
-            <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-around">
-              <div className="flex flex-col items-center">
-                <Car className="text-blue-600 mb-1" size={20} />
-                <span className="text-xs font-bold text-blue-900">{job.travelDistance || 'N/A'}</span>
-                <span className="text-[10px] text-blue-600 uppercase font-bold">Distance</span>
+            <div 
+              className={`p-4 bg-blue-50 border border-blue-100 rounded-2xl flex flex-col ${route ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
+              onClick={() => route && setShowRouteDetails(!showRouteDetails)}
+            >
+              <div className="flex items-center justify-around w-full">
+                <div className="flex flex-col items-center">
+                  <Car className="text-blue-600 mb-1" size={20} />
+                  <span className="text-xs font-bold text-blue-900">{loading ? '...' : displayDistance || 'N/A'}</span>
+                  <span className="text-[10px] text-blue-600 uppercase font-bold">Distance</span>
+                </div>
+                <div className="w-px h-8 bg-blue-200" />
+                <div className="flex flex-col items-center">
+                  <Clock className="text-blue-600 mb-1" size={20} />
+                  <span className="text-xs font-bold text-blue-900">{loading ? '...' : displayDuration || 'N/A'}</span>
+                  <span className="text-[10px] text-blue-600 uppercase font-bold">Temps (Voiture)</span>
+                </div>
+                {route && (
+                  <div className="flex flex-col items-center justify-center ml-2 text-blue-500">
+                    {showRouteDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </div>
+                )}
               </div>
-              <div className="w-px h-8 bg-blue-200" />
-              <div className="flex flex-col items-center">
-                <Clock className="text-blue-600 mb-1" size={20} />
-                <span className="text-xs font-bold text-blue-900">{job.travelTime || 'N/A'}</span>
-                <span className="text-[10px] text-blue-600 uppercase font-bold">Temps (Voiture)</span>
-              </div>
+              
+              {/* Route Steps Dropdown */}
+              <AnimatePresence>
+                {showRouteDetails && route && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                    animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+                    exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-3 border-t border-blue-200/50 space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                      <p className="text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-2">Détails de l'itinéraire</p>
+                      {route.steps.map((step, index) => (
+                        <div key={index} className="flex gap-3 text-xs">
+                          <div className="flex flex-col items-center mt-1">
+                            <div className="w-2 h-2 rounded-full bg-blue-400" />
+                            {index < route.steps.length - 1 && <div className="w-px h-full bg-blue-200 my-0.5" />}
+                          </div>
+                          <div className="flex-1 pb-2">
+                            <p className="text-blue-900 font-medium">{step.instruction}</p>
+                            {step.distance > 0 && (
+                              <p className="text-[10px] text-blue-600 mt-0.5">{formatDistance(step.distance)}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Transit Route */}
@@ -136,7 +197,7 @@ export const JobDetailsModalContent: React.FC<{ job: JobOffer }> = ({ job }) => 
   );
 };
 
-export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose }) => {
+export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose, userCoords }) => {
   return (
     <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div 
@@ -166,7 +227,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose }
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <JobDetailsModalContent job={job} />
+          <JobDetailsModalContent job={job} userCoords={userCoords} />
         </div>
       </motion.div>
     </div>
