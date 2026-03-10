@@ -6,7 +6,19 @@ let aiInstance: GoogleGenAI | null = null;
 
 function getAI() {
   if (!aiInstance) {
-    aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    try {
+      // The API key is injected by Vite's define plugin.
+      // If it's empty on GitHub Pages, this might throw an error.
+      const apiKey = process.env.GEMINI_API_KEY || "";
+      if (!apiKey) {
+        console.warn("GEMINI_API_KEY is missing. AI features will not work.");
+        return null;
+      }
+      aiInstance = new GoogleGenAI({ apiKey });
+    } catch (e) {
+      console.error("Failed to initialize GoogleGenAI:", e);
+      return null;
+    }
   }
   return aiInstance;
 }
@@ -14,6 +26,11 @@ function getAI() {
 export async function searchJobs(params: SearchParams): Promise<JobOffer[]> {
   const { query, location, radius, lat, lng, filters, userAddress } = params;
   const ai = getAI();
+  
+  if (!ai) {
+    console.warn("AI not initialized, returning mock jobs as fallback.");
+    return getMockJobs(params);
+  }
   
   const filterText = filters ? `
   Filtres additionnels :
@@ -112,6 +129,8 @@ export async function searchJobs(params: SearchParams): Promise<JobOffer[]> {
 
 export async function geocodeLocation(locationName: string): Promise<{ lat: number, lng: number } | null> {
   const ai = getAI();
+  if (!ai) return null;
+  
   const prompt = `Donne-moi les coordonnées GPS (latitude et longitude) pour le lieu suivant : "${locationName}". 
   Réponds uniquement au format JSON : {"lat": 0.0, "lng": 0.0}`;
 
@@ -204,6 +223,8 @@ export function getMockJobs(params: SearchParams): JobOffer[] {
 export async function getAddressSuggestions(input: string): Promise<string[]> {
   if (input.length < 3) return [];
   const ai = getAI();
+  if (!ai) return [];
+  
   const prompt = `Donne-moi 5 suggestions d'adresses postales réelles en France commençant par ou correspondant à : "${input}". 
   Réponds uniquement au format JSON : ["adresse 1", "adresse 2", ...]`;
 
