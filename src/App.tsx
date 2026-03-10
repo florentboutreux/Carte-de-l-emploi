@@ -386,7 +386,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <JobDetailsModalContent job={viewedJob} userCoords={userCoords} />
+                    <JobDetailsModalContent job={viewedJob} />
                   </div>
                 </motion.div>
               )}
