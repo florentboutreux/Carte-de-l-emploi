@@ -6,6 +6,7 @@ import { JobOffer } from '../types';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useRoute } from '../hooks/useRoute';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -51,6 +52,7 @@ function MapEvents({ onLocationSelect }: { onLocationSelect?: (lat: number, lng:
 export const JobMap: React.FC<JobMapProps> = ({ jobs, center, userCoords, onLocationSelect, onJobSelect, selectedJobId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedJob = jobs.find(j => j.id === selectedJobId);
+  const { route } = useRoute(userCoords, selectedJob ? [selectedJob.lat, selectedJob.lng] : null);
 
   function MarkerController({ selectedId, jobs }: { selectedId: string | null, jobs: JobOffer[] }) {
     const map = useMap();
@@ -104,14 +106,21 @@ export const JobMap: React.FC<JobMapProps> = ({ jobs, center, userCoords, onLoca
           </Marker>
         )}
 
-        {selectedJob && userCoords && (
+        {route && route.coordinates.length > 0 ? (
+          <Polyline 
+            positions={route.coordinates} 
+            color="#3b82f6" 
+            weight={4}
+            opacity={0.8}
+          />
+        ) : selectedJob && userCoords ? (
           <Polyline 
             positions={[userCoords, [selectedJob.lat, selectedJob.lng]]} 
             color="#10b981" 
             dashArray="10, 10"
             weight={3}
           />
-        )}
+        ) : null}
         
         {jobs.map((job) => (
           <Marker 

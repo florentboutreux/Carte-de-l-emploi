@@ -1,6 +1,6 @@
 import React from 'react';
 import { JobOffer } from '../types';
-import { ExternalLink, MapPin, Building2, Heart, Car, Clock } from 'lucide-react';
+import { ExternalLink, MapPin, Building2, Heart, Car, Clock, TrainFront } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface JobCardProps {
@@ -63,18 +63,38 @@ export const JobCard: React.FC<JobCardProps> = ({ job, isSelected, isFavorite, o
           <span>{job.location}</span>
         </div>
         
-        {(job.travelDistance || job.travelTime) && (
-          <div className="flex items-center gap-3 mt-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100/50">
-            {job.travelDistance && (
-              <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700">
-                <Car size={12} />
-                <span>{job.travelDistance}</span>
+        {(job.travelDistance || job.travelTime || job.transitTime) && (
+          <div className="flex flex-col gap-2 mt-2">
+            {(job.travelDistance || job.travelTime) && (
+              <div className="flex items-center gap-3 p-2 bg-blue-50/50 rounded-lg border border-blue-100/50">
+                {job.travelDistance && (
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700">
+                    <Car size={12} />
+                    <span>{job.travelDistance}</span>
+                  </div>
+                )}
+                {job.travelTime && (
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700">
+                    <Clock size={12} />
+                    <span>{job.travelTime}</span>
+                  </div>
+                )}
               </div>
             )}
-            {job.travelTime && (
-              <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700">
-                <Clock size={12} />
-                <span>{job.travelTime}</span>
+            
+            {(job.transitTime || job.transitSummary) && (
+              <div className="flex items-center gap-3 p-2 bg-purple-50/50 rounded-lg border border-purple-100/50">
+                {job.transitTime && (
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-purple-700">
+                    <TrainFront size={12} />
+                    <span>{job.transitTime}</span>
+                  </div>
+                )}
+                {job.transitSummary && (
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-purple-600 truncate">
+                    <span className="truncate">{job.transitSummary}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -47,41 +47,49 @@ export const JobDetailsModalContent: React.FC<{ job: JobOffer }> = ({ job }) => 
       {(job.travelDistance || job.travelTime || job.transitTime) && (
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <Car size={16} className="text-blue-600" />
+            <MapPin size={16} className="text-blue-600" />
             Options de trajet
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Car Route */}
-            <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-around">
-              <div className="flex flex-col items-center">
-                <Car className="text-blue-600 mb-1" size={20} />
-                <span className="text-xs font-bold text-blue-900">{job.travelDistance || 'N/A'}</span>
-                <span className="text-[10px] text-blue-600 uppercase font-bold">Distance</span>
+            {(job.travelDistance || job.travelTime) && (
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-around">
+                <div className="flex flex-col items-center">
+                  <Car className="text-blue-600 mb-1" size={20} />
+                  <span className="text-xs font-bold text-blue-900">{job.travelDistance || 'N/A'}</span>
+                  <span className="text-[10px] text-blue-600 uppercase font-bold">Distance</span>
+                </div>
+                <div className="w-px h-8 bg-blue-200" />
+                <div className="flex flex-col items-center">
+                  <Clock className="text-blue-600 mb-1" size={20} />
+                  <span className="text-xs font-bold text-blue-900">{job.travelTime || 'N/A'}</span>
+                  <span className="text-[10px] text-blue-600 uppercase font-bold">Voiture</span>
+                </div>
               </div>
-              <div className="w-px h-8 bg-blue-200" />
-              <div className="flex flex-col items-center">
-                <Clock className="text-blue-600 mb-1" size={20} />
-                <span className="text-xs font-bold text-blue-900">{job.travelTime || 'N/A'}</span>
-                <span className="text-[10px] text-blue-600 uppercase font-bold">Temps (Voiture)</span>
-              </div>
-            </div>
+            )}
 
             {/* Transit Route */}
-            <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-around">
-              <div className="flex flex-col items-center">
-                <TrainFront className="text-purple-600 mb-1" size={20} />
-                <span className="text-xs font-bold text-purple-900">{job.transitTime || 'N/A'}</span>
-                <span className="text-[10px] text-purple-600 uppercase font-bold">Temps (Transport)</span>
+            {(job.transitTime || job.transitSummary) && (
+              <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-around">
+                <div className="flex flex-col items-center">
+                  <TrainFront className="text-purple-600 mb-1" size={20} />
+                  <span className="text-xs font-bold text-purple-900">{job.transitTime || 'N/A'}</span>
+                  <span className="text-[10px] text-purple-600 uppercase font-bold">Transport</span>
+                </div>
+                {job.transitSummary && (
+                  <>
+                    <div className="w-px h-8 bg-purple-200" />
+                    <div className="flex flex-col items-center text-center px-2 max-w-[140px]">
+                      <span className="text-[10px] font-bold text-purple-900 leading-tight">
+                        {job.transitSummary}
+                      </span>
+                      <span className="text-[10px] text-purple-600 uppercase font-bold mt-1">Itinéraire</span>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="w-px h-8 bg-purple-200" />
-              <div className="flex flex-col items-center text-center px-2">
-                <span className="text-[10px] font-bold text-purple-900 leading-tight">
-                  {job.transitSummary || 'Aucun trajet direct trouvé'}
-                </span>
-                <span className="text-[10px] text-purple-600 uppercase font-bold mt-1">Résumé</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
