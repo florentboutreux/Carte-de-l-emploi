@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Google AI Studio App</title>
+    <script>
+      // Polyfill process for browser environments to prevent crashes from Node.js libraries
+      window.process = {
+        env: {
+          NODE_ENV: 'production'
+        },
+        platform: 'browser',
+        version: '',
+        arch: '',
+        emit: function() {}
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
